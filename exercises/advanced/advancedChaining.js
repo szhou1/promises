@@ -21,13 +21,29 @@ var lib = require('../../lib/advancedChainingLib.js');
 // Visit the following url to sign up for a free account
 //     https://developer.clarifai.com/accounts/login/?next=/applications/
 // Then, create a new Application and pass your Client Id and Client Secret into the method below
-lib.setImageTaggerCredentials('1mbdtpIkonr2ZlQUNcA0TKngLNdYRppROkpY2XF2', 'KAhklMF9koYJAbw4gKvV4ncuM3pJWQiGce-GFfhJ');
+lib.setImageTaggerCredentials('tUudTChaH34lrW5KHW1ly9R7djrbFNLGdlT8mur7', 'EZA0QP4sgxs1jAZyWOcCbyaEfpbi9yFTHTwZmekH');
 
 var searchCommonTagsFromGitHubProfiles = function(githubHandles) {
-  console.log(githubHandles);
-  var promises = githubHandles.map((handle) => lib.getGitHubProfile(handle));
-  
-  Promise.all(promises)
+
+  var authToken;
+
+  return lib.authenticateImageTagger()
+    .then(function(token) {
+      authToken = token;
+      return Promise.all(githubHandles.map(lib.getGitHubProfile));
+    })
+    .map(function(profile) {
+      // console.log(profile);
+      return lib.tagImage(profile.avatarUrl, authToken);
+    })
+    .then(function(tags) {
+      // console.log('tags', tags);
+      return lib.getIntersection(tags);
+    })
+    .catch(function(error) {
+      console.error(error);
+    });
+
 };
 
 // Export these functions so we can unit test them
